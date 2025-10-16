@@ -57,7 +57,7 @@ const SignupPage: React.FC = () => {
             email: form.email,
             phone: form.phone,
             country_code: form.countryCode,
-            promo_code: "a3",
+            promo_code: "Mahesh",
           }
         ]);
 
