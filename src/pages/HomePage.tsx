@@ -876,8 +876,8 @@ const HomePage: React.FC = () => {
             <div className="grid md:grid-cols-3 gap-8 justify-center">
               {[
                 {
-                  title: "Sign up free",
-                  desc: "Create your account quickly using email or social login to access the portal.",
+                  title: "Sign up for an account",
+                  desc: "Sign up today and explore all verified H1B sponsors - forever. ",
                   bgColor: "bg-blue-50",
                   image: "/add-user.svg",
                 },
