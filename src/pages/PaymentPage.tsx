@@ -176,11 +176,7 @@
 
 
 
-
-
-
-
-/// src/pages/PaymentPage.tsx
+// src/pages/PaymentPage.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
@@ -684,5 +680,6 @@ const PaymentPage: React.FC = () => {
     </div>
   );
 };
+
 
 export default PaymentPage;
