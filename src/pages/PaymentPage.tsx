@@ -104,7 +104,7 @@ const PaymentPage: React.FC = () => {
     try {
       console.log("📧 Sending payment confirmation via API...");
       
-      const response = await fetch('/api/send-payment-confirmation.cjs', {
+      const response = await fetch('/api/send-payment-confirmation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
