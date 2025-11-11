@@ -554,7 +554,7 @@ const SignupPage: React.FC = () => {
                     : "bg-gradient-to-r from-blue-600 to-purple-600"
                 }`}
               >
-                {loading ? "Creating Account..." : "Proceed to Payment"}
+                {loading ? "Redirecting to paypal payment page..." : "Proceed to Payment"}
               </button>
             </form>
           </div>
