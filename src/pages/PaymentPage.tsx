@@ -180,7 +180,7 @@
 
 
 
-// src/pages/PaymentPage.tsx
+/// src/pages/PaymentPage.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
@@ -541,15 +541,9 @@ const PaymentPage: React.FC = () => {
     };
   }, [sdkReady, amount, currency, email, fullName, phone, countryCode, leadRef, navigate, success]);
 
-  const goToThankYou = () => {
-    navigate("/thank-you", { 
-      state: { 
-        email, 
-        orderID: completedOrderId,
-        fullName,
-        authStatus
-      } 
-    });
+  // FIXED: Corrected the function to redirect to the external URL
+  const goToAccount = () => {
+    window.location.href = "https://sponsored-jobs-one.vercel.app/";
   };
 
   const goBackToSignup = () => {
@@ -666,7 +660,7 @@ const PaymentPage: React.FC = () => {
                 {showRedirectPrompt && (
                   <div className="mt-4">
                     <button 
-                      onClick={() => { window.location.href = "https://sponsored-jobs-one.vercel.app/"; }}
+                      onClick={goToAccount}
                       className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
                     >
                       Continue to Your Account
