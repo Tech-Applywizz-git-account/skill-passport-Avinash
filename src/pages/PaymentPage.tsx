@@ -1,185 +1,3 @@
-// import React, { useEffect, useMemo, useRef, useState } from "react";
-// import { useLocation, useNavigate } from "react-router-dom";
-
-// // Frontend env (safe)
-// const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID as string;
-// const DEFAULT_CURRENCY = (import.meta.env.VITE_PAYPAL_CURRENCY as string) || "USD";
-// const FUNCTIONS_BASE = (import.meta.env.VITE_FUNCTIONS_BASE as string)?.replace(/\/+$/, "") || "";
-// const PUBLIC_JWT = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined; // optional if Verify JWT = true
-
-// function removeExistingPayPalScript() {
-//   const existing = document.getElementById("paypal-sdk");
-//   if (existing) existing.remove();
-// }
-// function loadPayPalSdk(clientId: string, currency: string): Promise<void> {
-//   return new Promise((resolve, reject) => {
-//     if ((window as any).paypal) return resolve();
-//     removeExistingPayPalScript();
-//     const s = document.createElement("script");
-//     s.id = "paypal-sdk";
-//     s.async = true;
-//     s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
-//       clientId
-//     )}&currency=${encodeURIComponent(currency)}&components=buttons&intent=capture`;
-//     s.onload = () => ((window as any).paypal ? resolve() : reject(new Error("window.paypal missing")));
-//     s.onerror = () => reject(new Error("Failed to load PayPal SDK"));
-//     document.body.appendChild(s);
-//   });
-// }
-
-// // Build headers (works for both public and protected functions)
-// function headers() {
-//   const base: Record<string, string> = { "Content-Type": "application/json" };
-//   if (PUBLIC_JWT) {
-//     base.Authorization = `Bearer ${PUBLIC_JWT}`;
-//     base.apikey = PUBLIC_JWT;
-//   }
-//   return base;
-// }
-
-// const PaymentPage: React.FC = () => {
-//   const navigate = useNavigate();
-//   const { state } = useLocation() as {
-//     state?: { email?: string; fullName?: string; amount?: string; currency?: string };
-//   };
-
-//   const email = state?.email || "";
-//   const amount = state?.amount || "14.99";
-//   const currency = state?.currency || DEFAULT_CURRENCY;
-
-//   const paypalButtonsRef = useRef<HTMLDivElement>(null);
-//   const [sdkReady, setSdkReady] = useState(false);
-//   const [creating, setCreating] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-
-//   // Sanity checks for base URL
-//   const baseOK = useMemo(() => Boolean(FUNCTIONS_BASE), []);
-
-//   // Load SDK
-//   useEffect(() => {
-//     (async () => {
-//       try {
-//         if (!PAYPAL_CLIENT_ID) throw new Error("VITE_PAYPAL_CLIENT_ID not set.");
-//         if (!email) throw new Error("Missing email (navigate from Signup with state.email).");
-//         await loadPayPalSdk(PAYPAL_CLIENT_ID, currency);
-//         setSdkReady(true);
-//       } catch (e: any) {
-//         console.error(e);
-//         setError(e.message || "Failed to initialize PayPal.");
-//       }
-//     })();
-//   }, [email, currency]);
-
-//   // Render PayPal Buttons
-//   useEffect(() => {
-//     if (!sdkReady || !paypalButtonsRef.current || !baseOK) return;
-
-//     const win: any = window;
-//     const buttons = win.paypal.Buttons({
-//       createOrder: async () => {
-//         try {
-//           setCreating(true);
-//           const res = await fetch(`${FUNCTIONS_BASE}/create-paypal-order`, {
-//             method: "POST",
-//             headers: headers(),
-//             body: JSON.stringify({ amount, currency, lead_email: email }),
-//           });
-//           const data = await res.json();
-//           setCreating(false);
-//           if (!res.ok || !data?.id) {
-//             console.error("create-paypal-order failed:", res.status, data);
-//             throw new Error(data?.error || `create-paypal-order HTTP ${res.status}`);
-//           }
-//           return data.id; // PayPal expects order ID string
-//         } catch (e: any) {
-//           setCreating(false);
-//           setError(`Create order failed: ${e.message}`);
-//           throw e;
-//         }
-//       },
-//       onApprove: async (data: any) => {
-//         try {
-//           const res = await fetch(`${FUNCTIONS_BASE}/capture-paypal-order`, {
-//             method: "POST",
-//             headers: headers(),
-//             body: JSON.stringify({ order_id: data.orderID, lead_email: email }),
-//           });
-//           const capture = await res.json();
-//           if (!res.ok) {
-//             console.error("capture-paypal-order failed:", res.status, capture);
-//             throw new Error(capture?.error || `capture-paypal-order HTTP ${res.status}`);
-//           }
-//           alert("Payment successful!");
-//           navigate("/thank-you", { state: { email, orderID: data.orderID, capture } });
-//         } catch (e: any) {
-//           console.error(e);
-//           setError(`Capture failed: ${e.message}`);
-//         }
-//       },
-//       onCancel: () => {
-//         navigate("/", { replace: true });
-//       },
-//       onError: (err: any) => {
-//         console.error("PayPal Buttons onError:", err);
-//         setError("PayPal JS error (see console).");
-//       },
-//     });
-
-//     buttons.render(paypalButtonsRef.current);
-//     return () => {
-//       try { buttons.close(); } catch {}
-//     };
-//   }, [sdkReady, baseOK, amount, currency, email, navigate]);
-
-//   return (
-//     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-//       <div className="w-full max-w-lg rounded-2xl bg-white shadow p-6">
-//         <h2 className="text-2xl font-semibold mb-2">Complete Your Payment</h2>
-//         <p className="text-sm text-gray-600 mb-6">
-//           Amount: <strong>{currency} {amount}</strong>
-//         </p>
-
-//         {!FUNCTIONS_BASE && (
-//           <div className="mb-4 rounded bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
-//             Missing VITE_FUNCTIONS_BASE. Set it to your Supabase Functions URL.
-//           </div>
-//         )}
-
-//         {error && (
-//           <div className="mb-4 rounded bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
-//             {error}
-//           </div>
-//         )}
-
-//         <div className="mb-4" ref={paypalButtonsRef} />
-//         {!sdkReady && <p className="text-sm text-gray-500">Loading PayPal…</p>}
-//         {creating && <p className="text-sm text-gray-500">Creating order…</p>}
-
-//         {/* <div className="mt-6 text-xs text-gray-500 border-t pt-3">
-//           <div><b>Functions Base:</b> {FUNCTIONS_BASE || "(missing)"} </div>
-//           <div><b>Anon header attached:</b> {PUBLIC_JWT ? "yes" : "no (public function)"} </div>
-//           <div><b>Email:</b> {email || "(none)"} </div>
-//         </div> */}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default PaymentPage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // src/pages/PaymentPage.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -281,7 +99,44 @@ const PaymentPage: React.FC = () => {
   const [completedOrderId, setCompletedOrderId] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<string>("");
 
-  // Function to send confirmation email
+  // NEW FUNCTION: Send payment confirmation via API
+  const sendPaymentConfirmation = async (userEmail: string, userFullName: string, orderId: string) => {
+    try {
+      console.log("📧 Sending payment confirmation via API...");
+      
+      const response = await fetch('/api/send-payment-confirmation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          name: userFullName,
+          paymentDetails: {
+            amount: amount,
+            transaction_id: orderId,
+            payment_date: new Date().toISOString(),
+            payment_method: 'PayPal'
+          }
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("❌ Payment confirmation API failed:", result.error);
+        return { success: false, error: result.error };
+      }
+
+      console.log("✅ Payment confirmation email sent successfully via API");
+      return { success: true, data: result };
+    } catch (error: any) {
+      console.error("❌ Payment confirmation API error:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Function to send confirmation email (keep existing for now, but we'll use the new one)
   const sendConfirmationEmail = async (userEmail: string, userFullName: string, orderId: string) => {
     try {
       console.log("📧 Sending confirmation email...");
@@ -506,14 +361,25 @@ const PaymentPage: React.FC = () => {
                   console.log("✅ Auth user created successfully");
                   
                   setAuthStatus("Sending confirmation email...");
-                  return sendConfirmationEmail(email, fullName, data.orderID)
+                  // USE THE NEW API ROUTE INSTEAD OF THE OLD ONE
+                  return sendPaymentConfirmation(email, fullName, data.orderID)
                     .then((emailResult) => {
                       if (emailResult.success) {
-                        console.log("✅ Confirmation email sent successfully");
+                        console.log("✅ Payment confirmation email sent successfully via API");
                         setAuthStatus("Account created & confirmation sent!");
                       } else {
-                        console.warn("⚠️ Email sending failed but payment completed");
-                        setAuthStatus("Account created - email failed");
+                        console.warn("⚠️ API email sending failed, trying fallback...");
+                        // Fallback to old method if new API fails
+                        return sendConfirmationEmail(email, fullName, data.orderID)
+                          .then((fallbackResult) => {
+                            if (fallbackResult.success) {
+                              console.log("✅ Fallback email sent successfully");
+                              setAuthStatus("Account created & confirmation sent!");
+                            } else {
+                              console.warn("⚠️ All email methods failed but payment completed");
+                              setAuthStatus("Account created - email failed");
+                            }
+                          });
                       }
                       
                       setSuccess(true);
@@ -687,7 +553,7 @@ const PaymentPage: React.FC = () => {
                   </path>
                 </svg>
 
-                <h3 className="mt-4 text-2xl font-semibold text-gray-900">Payment Successful!</h3>
+                <h3 className="mt-4 text-2xl font-semibold text-gray-900">Payment Successful! Please check your mail and verify your credentials</h3>
                 
                 {authStatus && (
                   <p className="mt-2 text-sm text-green-600 bg-green-50 rounded-lg p-2">
