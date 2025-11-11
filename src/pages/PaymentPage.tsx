@@ -173,13 +173,6 @@
 
 
 
-
-
-
-
-
-
-
 // src/pages/PaymentPage.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -726,5 +719,6 @@ const PaymentPage: React.FC = () => {
     </div>
   );
 };
+
 
 export default PaymentPage;
