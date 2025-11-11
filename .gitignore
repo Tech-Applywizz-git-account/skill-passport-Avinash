@@ -23,3 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+server.js
+email-sender.js
+test-smtp.js
+
+
+
+

@@ -1,3 +1,181 @@
+<<<<<<< HEAD
+=======
+// import React, { useEffect, useMemo, useRef, useState } from "react";
+// import { useLocation, useNavigate } from "react-router-dom";
+
+// // Frontend env (safe)
+// const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID as string;
+// const DEFAULT_CURRENCY = (import.meta.env.VITE_PAYPAL_CURRENCY as string) || "USD";
+// const FUNCTIONS_BASE = (import.meta.env.VITE_FUNCTIONS_BASE as string)?.replace(/\/+$/, "") || "";
+// const PUBLIC_JWT = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined; // optional if Verify JWT = true
+
+// function removeExistingPayPalScript() {
+//   const existing = document.getElementById("paypal-sdk");
+//   if (existing) existing.remove();
+// }
+// function loadPayPalSdk(clientId: string, currency: string): Promise<void> {
+//   return new Promise((resolve, reject) => {
+//     if ((window as any).paypal) return resolve();
+//     removeExistingPayPalScript();
+//     const s = document.createElement("script");
+//     s.id = "paypal-sdk";
+//     s.async = true;
+//     s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
+//       clientId
+//     )}&currency=${encodeURIComponent(currency)}&components=buttons&intent=capture`;
+//     s.onload = () => ((window as any).paypal ? resolve() : reject(new Error("window.paypal missing")));
+//     s.onerror = () => reject(new Error("Failed to load PayPal SDK"));
+//     document.body.appendChild(s);
+//   });
+// }
+
+// // Build headers (works for both public and protected functions)
+// function headers() {
+//   const base: Record<string, string> = { "Content-Type": "application/json" };
+//   if (PUBLIC_JWT) {
+//     base.Authorization = `Bearer ${PUBLIC_JWT}`;
+//     base.apikey = PUBLIC_JWT;
+//   }
+//   return base;
+// }
+
+// const PaymentPage: React.FC = () => {
+//   const navigate = useNavigate();
+//   const { state } = useLocation() as {
+//     state?: { email?: string; fullName?: string; amount?: string; currency?: string };
+//   };
+
+//   const email = state?.email || "";
+//   const amount = state?.amount || "14.99";
+//   const currency = state?.currency || DEFAULT_CURRENCY;
+
+//   const paypalButtonsRef = useRef<HTMLDivElement>(null);
+//   const [sdkReady, setSdkReady] = useState(false);
+//   const [creating, setCreating] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+
+//   // Sanity checks for base URL
+//   const baseOK = useMemo(() => Boolean(FUNCTIONS_BASE), []);
+
+//   // Load SDK
+//   useEffect(() => {
+//     (async () => {
+//       try {
+//         if (!PAYPAL_CLIENT_ID) throw new Error("VITE_PAYPAL_CLIENT_ID not set.");
+//         if (!email) throw new Error("Missing email (navigate from Signup with state.email).");
+//         await loadPayPalSdk(PAYPAL_CLIENT_ID, currency);
+//         setSdkReady(true);
+//       } catch (e: any) {
+//         console.error(e);
+//         setError(e.message || "Failed to initialize PayPal.");
+//       }
+//     })();
+//   }, [email, currency]);
+
+//   // Render PayPal Buttons
+//   useEffect(() => {
+//     if (!sdkReady || !paypalButtonsRef.current || !baseOK) return;
+
+//     const win: any = window;
+//     const buttons = win.paypal.Buttons({
+//       createOrder: async () => {
+//         try {
+//           setCreating(true);
+//           const res = await fetch(`${FUNCTIONS_BASE}/create-paypal-order`, {
+//             method: "POST",
+//             headers: headers(),
+//             body: JSON.stringify({ amount, currency, lead_email: email }),
+//           });
+//           const data = await res.json();
+//           setCreating(false);
+//           if (!res.ok || !data?.id) {
+//             console.error("create-paypal-order failed:", res.status, data);
+//             throw new Error(data?.error || `create-paypal-order HTTP ${res.status}`);
+//           }
+//           return data.id; // PayPal expects order ID string
+//         } catch (e: any) {
+//           setCreating(false);
+//           setError(`Create order failed: ${e.message}`);
+//           throw e;
+//         }
+//       },
+//       onApprove: async (data: any) => {
+//         try {
+//           const res = await fetch(`${FUNCTIONS_BASE}/capture-paypal-order`, {
+//             method: "POST",
+//             headers: headers(),
+//             body: JSON.stringify({ order_id: data.orderID, lead_email: email }),
+//           });
+//           const capture = await res.json();
+//           if (!res.ok) {
+//             console.error("capture-paypal-order failed:", res.status, capture);
+//             throw new Error(capture?.error || `capture-paypal-order HTTP ${res.status}`);
+//           }
+//           alert("Payment successful!");
+//           navigate("/thank-you", { state: { email, orderID: data.orderID, capture } });
+//         } catch (e: any) {
+//           console.error(e);
+//           setError(`Capture failed: ${e.message}`);
+//         }
+//       },
+//       onCancel: () => {
+//         navigate("/", { replace: true });
+//       },
+//       onError: (err: any) => {
+//         console.error("PayPal Buttons onError:", err);
+//         setError("PayPal JS error (see console).");
+//       },
+//     });
+
+//     buttons.render(paypalButtonsRef.current);
+//     return () => {
+//       try { buttons.close(); } catch {}
+//     };
+//   }, [sdkReady, baseOK, amount, currency, email, navigate]);
+
+//   return (
+//     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+//       <div className="w-full max-w-lg rounded-2xl bg-white shadow p-6">
+//         <h2 className="text-2xl font-semibold mb-2">Complete Your Payment</h2>
+//         <p className="text-sm text-gray-600 mb-6">
+//           Amount: <strong>{currency} {amount}</strong>
+//         </p>
+
+//         {!FUNCTIONS_BASE && (
+//           <div className="mb-4 rounded bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+//             Missing VITE_FUNCTIONS_BASE. Set it to your Supabase Functions URL.
+//           </div>
+//         )}
+
+//         {error && (
+//           <div className="mb-4 rounded bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+//             {error}
+//           </div>
+//         )}
+
+//         <div className="mb-4" ref={paypalButtonsRef} />
+//         {!sdkReady && <p className="text-sm text-gray-500">Loading PayPal…</p>}
+//         {creating && <p className="text-sm text-gray-500">Creating order…</p>}
+
+//         {/* <div className="mt-6 text-xs text-gray-500 border-t pt-3">
+//           <div><b>Functions Base:</b> {FUNCTIONS_BASE || "(missing)"} </div>
+//           <div><b>Anon header attached:</b> {PUBLIC_JWT ? "yes" : "no (public function)"} </div>
+//           <div><b>Email:</b> {email || "(none)"} </div>
+//         </div> */}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default PaymentPage;
+
+
+
+
+
+
+
+>>>>>>> 54f96d780af965cb6dd2749ec9040ea193b57128
 // src/pages/PaymentPage.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -592,5 +770,6 @@ const PaymentPage: React.FC = () => {
     </div>
   );
 };
+
 
 export default PaymentPage;
