@@ -179,8 +179,7 @@
 
 
 
-
-/// src/pages/PaymentPage.tsx
+// src/pages/PaymentPage.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
@@ -281,27 +280,43 @@ const PaymentPage: React.FC = () => {
   const [completedOrderId, setCompletedOrderId] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<string>("");
 
-  // Load SDK
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!PAYPAL_CLIENT_ID) {
-          throw new Error("PayPal Client ID not configured");
+  // Function to send confirmation email
+  const sendConfirmationEmail = async (userEmail: string, userFullName: string, orderId: string) => {
+    try {
+      console.log("📧 Sending confirmation email...");
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-payment-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            fullName: userFullName,
+            orderID: orderId,
+            amount: amount,
+            currency: currency,
+          }),
         }
-        if (!email) {
-          throw new Error("Missing user information. Please complete the signup form first.");
-        }
-        
-        console.log("Loading PayPal SDK...");
-        await loadPayPalSdk(PAYPAL_CLIENT_ID, currency);
-        setSdkReady(true);
-        console.log("PayPal SDK ready");
-      } catch (e: any) {
-        console.error("PayPal SDK loading error:", e);
-        setError(e.message || "Failed to initialize payment system.");
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("❌ Email sending failed:", data.error);
+        return { success: false, error: data.error };
       }
-    })();
-  }, [email, currency]);
+
+      console.log("✅ Confirmation email sent successfully");
+      return { success: true };
+    } catch (error: any) {
+      console.error("❌ Email sending error:", error);
+      return { success: false, error: error.message };
+    }
+  };
 
   // Function to create user in Supabase Auth
   const createAuthUser = async (userEmail: string, userFullName: string) => {
@@ -312,7 +327,6 @@ const PaymentPage: React.FC = () => {
       console.log("🔐 Creating auth user for:", cleanEmail);
       setAuthStatus("Creating your account...");
 
-      // Try to sign up new user
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password: defaultPassword,
@@ -329,14 +343,12 @@ const PaymentPage: React.FC = () => {
       if (error) {
         console.error("❌ Auth error:", error);
         
-        // If user already exists, that's fine - we'll proceed
         if (error.message?.includes("already registered") || error.code === 'user_already_exists') {
           console.log("✅ User already exists in auth");
           setAuthStatus("Account already exists - payment completed");
           return { success: true, exists: true };
         }
         
-        // For other errors, log but don't block
         console.warn("⚠️ Auth creation failed but continuing:", error.message);
         setAuthStatus("Payment completed - you can login with email later");
         return { success: false, error: error.message, nonBlocking: true };
@@ -346,7 +358,6 @@ const PaymentPage: React.FC = () => {
         console.log("✅ Auth user created successfully:", data.user.id);
         setAuthStatus("Account created successfully!");
         
-        // Update payment record with auth user ID
         if (leadRef) {
           try {
             await supabase
@@ -365,7 +376,6 @@ const PaymentPage: React.FC = () => {
         return { success: true, exists: false, userId: data.user.id };
       }
 
-      // If we get here but no error, still success
       setAuthStatus("Payment completed successfully");
       return { success: true, exists: false };
 
@@ -409,7 +419,29 @@ const PaymentPage: React.FC = () => {
     }
   };
 
-  // Render PayPal Buttons - COMPLETELY FIXED VERSION
+  // Load SDK
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!PAYPAL_CLIENT_ID) {
+          throw new Error("PayPal Client ID not configured");
+        }
+        if (!email) {
+          throw new Error("Missing user information. Please complete the signup form first.");
+        }
+        
+        console.log("Loading PayPal SDK...");
+        await loadPayPalSdk(PAYPAL_CLIENT_ID, currency);
+        setSdkReady(true);
+        console.log("PayPal SDK ready");
+      } catch (e: any) {
+        console.error("PayPal SDK loading error:", e);
+        setError(e.message || "Failed to initialize payment system.");
+      }
+    })();
+  }, [email, currency]);
+
+  // Render PayPal Buttons
   useEffect(() => {
     if (!sdkReady || !paypalButtonsRef.current || success) return;
 
@@ -417,7 +449,6 @@ const PaymentPage: React.FC = () => {
 
     const win: any = window;
     
-    // FIXED: Use the correct PayPal integration pattern
     const buttons = win.paypal.Buttons({
       style: {
         layout: 'vertical',
@@ -431,7 +462,6 @@ const PaymentPage: React.FC = () => {
         setCreating(true);
         setError(null);
 
-        // FIXED: Return the promise directly without async/await
         return actions.order.create({
           purchase_units: [{
             amount: {
@@ -461,48 +491,60 @@ const PaymentPage: React.FC = () => {
         console.log("✅ PayPal order approved:", data.orderID);
         setAuthStatus("Processing payment...");
         
-        // FIXED: Return the capture promise chain
         return actions.order.capture().then(function(captureData: any) {
           console.log("💰 PayPal order captured:", captureData);
           
-          // Update payment record
           if (leadRef) {
             setAuthStatus("Updating payment records...");
             return updatePaymentRecord(data.orderID, captureData).then(function() {
               console.log("✅ Payment record updated");
               
-              // Create auth user (non-blocking)
               setAuthStatus("Creating your account...");
               return createAuthUser(email, fullName).then(function(authResult) {
                 if (authResult.success) {
-                  console.log("✅ Auth process completed");
+                  console.log("✅ Auth user created successfully");
+                  
+                  setAuthStatus("Sending confirmation email...");
+                  return sendConfirmationEmail(email, fullName, data.orderID)
+                    .then((emailResult) => {
+                      if (emailResult.success) {
+                        console.log("✅ Confirmation email sent successfully");
+                        setAuthStatus("Account created & confirmation sent!");
+                      } else {
+                        console.warn("⚠️ Email sending failed but payment completed");
+                        setAuthStatus("Account created - email failed");
+                      }
+                      
+                      setSuccess(true);
+                      setCompletedOrderId(data.orderID);
+
+                      requestAnimationFrame(() => {
+                        const canvas = cardCanvasRef.current;
+                        if (canvas) {
+                          if (!confettiInstanceRef.current) {
+                            confettiInstanceRef.current = confetti.create(canvas, { 
+                              resize: true, 
+                              useWorker: true 
+                            });
+                          }
+                          fireConfettiVia(confettiInstanceRef.current);
+                        }
+                      });
+
+                      setTimeout(() => setShowRedirectPrompt(true), 2000);
+                      
+                      return authResult;
+                    });
                 } else {
                   console.log("⚠️ Auth had issues but payment completed");
+                  setSuccess(true);
+                  setCompletedOrderId(data.orderID);
+                  setTimeout(() => setShowRedirectPrompt(true), 2000);
+                  return authResult;
                 }
-
-                // Show success UI
-                setSuccess(true);
-                setCompletedOrderId(data.orderID);
-
-                // Fire confetti
-                requestAnimationFrame(() => {
-                  const canvas = cardCanvasRef.current;
-                  if (canvas) {
-                    if (!confettiInstanceRef.current) {
-                      confettiInstanceRef.current = confetti.create(canvas, { 
-                        resize: true, 
-                        useWorker: true 
-                      });
-                    }
-                    fireConfettiVia(confettiInstanceRef.current);
-                  }
-                });
-
-                setTimeout(() => setShowRedirectPrompt(true), 2000);
               });
             });
           } else {
-            // If no leadRef, still show success
             setSuccess(true);
             setCompletedOrderId(data.orderID);
             setTimeout(() => setShowRedirectPrompt(true), 2000);
@@ -541,7 +583,6 @@ const PaymentPage: React.FC = () => {
     };
   }, [sdkReady, amount, currency, email, fullName, phone, countryCode, leadRef, navigate, success]);
 
-  // FIXED: Corrected the function to redirect to the external URL
   const goToAccount = () => {
     window.location.href = "https://sponsored-jobs-one.vercel.app/";
   };
