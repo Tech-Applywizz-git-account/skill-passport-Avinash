@@ -1,12 +1,8 @@
 {
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
+  "version": 2,
   "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "vite.config.js", "use": "@vercel/static-build" }
+    { "src": "api/**/*.js", "use": "@vercel/node@3.0.11" },
+    { "src": "vite.config.js", "use": "@vercel/static-build@2.0.23" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
