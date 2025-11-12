@@ -125,14 +125,14 @@ const PaymentPage: React.FC = () => {
 
       if (!response.ok) {
         console.error("❌ Payment confirmation API failed:", result.error);
-        return { success: false, error: result.error };
+        return { success: false, error: result.error, data: undefined };
       }
 
       console.log("✅ Payment confirmation email sent successfully via API");
-      return { success: true, data: result };
+      return { success: true, data: result, error: undefined };
     } catch (error: any) {
       console.error("❌ Payment confirmation API error:", error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message, data: undefined };
     }
   };
 
@@ -163,14 +163,14 @@ const PaymentPage: React.FC = () => {
 
       if (!response.ok) {
         console.error("❌ Email sending failed:", data.error);
-        return { success: false, error: data.error };
+        return { success: false, error: data.error, data: undefined };
       }
 
       console.log("✅ Confirmation email sent successfully");
-      return { success: true };
+      return { success: true, data: undefined, error: undefined };
     } catch (error: any) {
       console.error("❌ Email sending error:", error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message, data: undefined };
     }
   };
 
@@ -202,12 +202,12 @@ const PaymentPage: React.FC = () => {
         if (error.message?.includes("already registered") || error.code === 'user_already_exists') {
           console.log("✅ User already exists in auth");
           setAuthStatus("Account already exists - payment completed");
-          return { success: true, exists: true };
+          return { success: true, data: { exists: true }, error: undefined };
         }
         
         console.warn("⚠️ Auth creation failed but continuing:", error.message);
         setAuthStatus("Payment completed - you can login with email later");
-        return { success: false, error: error.message, nonBlocking: true };
+        return { success: false, error: error.message };
       }
 
       if (data.user) {
@@ -229,16 +229,16 @@ const PaymentPage: React.FC = () => {
           }
         }
         
-        return { success: true, exists: false, userId: data.user.id };
+        return { success: true, data: { exists: false, userId: data.user.id }, error: undefined };
       }
 
       setAuthStatus("Payment completed successfully");
-      return { success: true, exists: false };
+      return { success: true, data: { exists: false }, error: undefined };
 
     } catch (err: any) {
       console.error("❌ Unexpected error in auth creation:", err);
       setAuthStatus("Payment completed - account setup may need manual completion");
-      return { success: false, error: err.message, nonBlocking: true };
+      return { success: false, error: err.message };
     }
   };
 
@@ -356,13 +356,18 @@ const PaymentPage: React.FC = () => {
               console.log("✅ Payment record updated");
               
               setAuthStatus("Creating your account...");
-              return createAuthUser(email, fullName).then(function(authResult) {
+              createAuthUser(email, fullName).then(function(authResult) {
                 if (authResult.success) {
                   console.log("✅ Auth user created successfully");
                   
+                  // Access the data property since we changed the return structure
+                  const authData = authResult.data;
+                  const userExists = authData?.exists;
+                  const userId = authData?.userId;
+                  
                   setAuthStatus("Sending confirmation email...");
                   // USE THE NEW API ROUTE INSTEAD OF THE OLD ONE
-                  return sendPaymentConfirmation(email, fullName, data.orderID)
+                  sendPaymentConfirmation(email, fullName, data.orderID)
                     .then((emailResult) => {
                       if (emailResult.success) {
                         console.log("✅ Payment confirmation email sent successfully via API");
@@ -399,15 +404,12 @@ const PaymentPage: React.FC = () => {
                       });
 
                       setTimeout(() => setShowRedirectPrompt(true), 2000);
-                      
-                      return authResult;
                     });
                 } else {
                   console.log("⚠️ Auth had issues but payment completed");
                   setSuccess(true);
                   setCompletedOrderId(data.orderID);
                   setTimeout(() => setShowRedirectPrompt(true), 2000);
-                  return authResult;
                 }
               });
             });

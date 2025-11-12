@@ -1,18 +1,14 @@
 
 {
   "version": 2,
-  "functions": {
-    "api/send-payment-confirmation.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" }
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "package.json", "use": "@vercel/static-build" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/(.*)\\.(.*)", "dest": "/$1.$2" },
     { "src": "/(.*)", "dest": "/index.html" }
-  ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  ]
 }
