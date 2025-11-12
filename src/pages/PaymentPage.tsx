@@ -136,43 +136,83 @@ const PaymentPage: React.FC = () => {
     }
   };
 
-  // Function to send confirmation email (keep existing for now, but we'll use the new one)
-  const sendConfirmationEmail = async (userEmail: string, userFullName: string, orderId: string) => {
-    try {
-      console.log("📧 Sending confirmation email...");
+  // // Function to send confirmation email (keep existing for now, but we'll use the new one)
+  // const sendConfirmationEmail = async (userEmail: string, userFullName: string, orderId: string) => {
+  //   try {
+  //     console.log("📧 Sending confirmation email...");
       
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-payment-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            email: userEmail,
-            fullName: userFullName,
-            orderID: orderId,
-            amount: amount,
-            currency: currency,
-          }),
-        }
-      );
+  //     const response = await fetch(
+  //       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-payment-email`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+  //         },
+  //         body: JSON.stringify({
+  //           email: userEmail,
+  //           fullName: userFullName,
+  //           orderID: orderId,
+  //           amount: amount,
+  //           currency: currency,
+  //         }),
+  //       }
+  //     );
 
-      const data = await response.json();
+  //     const data = await response.json();
 
-      if (!response.ok) {
-        console.error("❌ Email sending failed:", data.error);
-        return { success: false, error: data.error, data: undefined };
-      }
+  //     if (!response.ok) {
+  //       console.error("❌ Email sending failed:", data.error);
+  //       return { success: false, error: data.error, data: undefined };
+  //     }
 
-      console.log("✅ Confirmation email sent successfully");
-      return { success: true, data: undefined, error: undefined };
-    } catch (error: any) {
-      console.error("❌ Email sending error:", error);
-      return { success: false, error: error.message, data: undefined };
+  //     console.log("✅ Confirmation email sent successfully");
+  //     return { success: true, data: undefined, error: undefined };
+  //   } catch (error: any) {
+  //     console.error("❌ Email sending error:", error);
+  //     return { success: false, error: error.message, data: undefined };
+  //   }
+  // };
+
+
+  // Function to send confirmation email
+const sendConfirmationEmail = async (userEmail: string, userFullName: string, orderId: string) => {
+  try {
+    console.log("📧 Sending confirmation email...");
+
+    const response = await fetch(`${import.meta.env.VITE_EMAIL_API_URL}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: userEmail,
+        name: userFullName,
+        paymentDetails: {
+          amount: amount,
+          currency: currency,
+          transaction_id: orderId,
+          payment_method: "PayPal",
+          payment_date: new Date(),
+        },
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("❌ Email sending failed:", data.error);
+      return { success: false, error: data.error, data: undefined };
     }
-  };
+
+    console.log("✅ Confirmation email sent successfully");
+    return { success: true, data: undefined, error: undefined };
+  } catch (error: any) {
+    console.error("❌ Email sending error:", error);
+    return { success: false, error: error.message, data: undefined };
+  }
+};
+
 
   // Function to create user in Supabase Auth
   const createAuthUser = async (userEmail: string, userFullName: string) => {
