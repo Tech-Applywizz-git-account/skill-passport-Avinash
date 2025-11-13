@@ -519,7 +519,7 @@ const sendConfirmationEmail = async (userEmail: string, userFullName: string, or
                     .then((emailResult) => {
                       if (emailResult.success) {
                         console.log("✅ Payment confirmation email sent successfully via API");
-                        setAuthStatus("Account created & confirmation sent!");
+                        setAuthStatus("Payment successful. Your account credentials have been sent to your email.!\nNote : please check your spam folder.");
                       } else {
                         console.warn("⚠️ API email sending failed, trying fallback...");
                         // Fallback to old method if new API fails
