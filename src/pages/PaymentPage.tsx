@@ -201,48 +201,45 @@ If you have any questions, contact us at support@skillpassport.com.
 
 const sendPaymentConfirmation = async (userEmail: string, userFullName: string, orderId: string) => {
   try {
-    console.log("📧 Sending payment confirmation via Edge Function...");
+    console.log("📧 Sending payment confirmation via send-email function...");
 
-    const amountVal = amount; // from the PaymentPage scope
-    const currencyVal = currency; // from the PaymentPage scope
+    const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!SUPABASE_ANON) console.warn("VITE_SUPABASE_ANON_KEY not set in env");
 
-    const { subject, text, html } = buildPaymentEmail(userEmail, userFullName, orderId, amountVal, currencyVal);
-
-    const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-    if (!SUPABASE_ANON) {
-      console.warn("VITE_SUPABASE_ANON_KEY not configured in env - request may be rejected by Supabase runtime");
-    }
-
-    const response = await fetch("https://xficomhdacoloehbzmlt.supabase.co/functions/v1/send-email", {
+    const resp = await fetch("https://xficomhdacoloehbzmlt.supabase.co/functions/v1/send-email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // include Supabase anon key so the Edge runtime accepts the request
+        // include anon key so Supabase accepts the request
         ...(SUPABASE_ANON ? { Authorization: `Bearer ${SUPABASE_ANON}` } : {}),
       },
       body: JSON.stringify({
-        // payload expected by your Edge Function: pass to, subject, text and html
-        to: userEmail,
-        subject,
-        text,
-        html,
+        email: userEmail,
+        name: userFullName,
+        paymentDetails: {
+          amount,
+          currency,
+          transaction_id: orderId,
+          payment_method: "PayPal",
+          payment_date: new Date().toISOString(),
+        },
       }),
     });
 
-    const result = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      console.error("❌ Payment confirmation API failed:", result);
-      return { success: false, error: result.error ?? result, data: undefined };
+    const data = await resp.json().catch(() => null);
+    if (!resp.ok) {
+      console.error("send-email failed:", data);
+      return { success: false, error: data ?? "unknown" };
     }
 
-    console.log("✅ Payment confirmation email sent successfully via API");
-    return { success: true, data: result, error: undefined };
-  } catch (error: any) {
-    console.error("❌ Payment confirmation API error:", error);
-    return { success: false, error: error.message, data: undefined };
+    console.log("Payment confirmation sent (send-email):", data);
+    return { success: true, data };
+  } catch (err: any) {
+    console.error("sendPaymentConfirmation error:", err);
+    return { success: false, error: err.message || String(err) };
   }
 };
+
 
 
 
