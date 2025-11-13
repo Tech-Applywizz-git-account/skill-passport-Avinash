@@ -100,41 +100,152 @@ const PaymentPage: React.FC = () => {
   const [authStatus, setAuthStatus] = useState<string>("");
 
   // NEW FUNCTION: Send payment confirmation via API
-  const sendPaymentConfirmation = async (userEmail: string, userFullName: string, orderId: string) => {
-    try {
-      console.log("📧 Sending payment confirmation via API...");
+  // const sendPaymentConfirmation = async (userEmail: string, userFullName: string, orderId: string) => {
+  //   try {
+  //     console.log("📧 Sending payment confirmation via API...");
       
-      const response = await fetch('https://skill-passportai-dinesh.vercel.app/api/send-payment-confirmation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          name: userFullName,
-          paymentDetails: {
-            amount: amount,
-            transaction_id: orderId,
-            payment_date: new Date().toISOString(),
-            payment_method: 'PayPal'
-          }
-        }),
-      });
+  //     const response = await fetch('https://xficomhdacoloehbzmlt.supabase.co/functions/v1/send-email', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         email: userEmail,
+  //         name: userFullName,
+  //         paymentDetails: {
+  //           amount: amount,
+  //           transaction_id: orderId,
+  //           payment_date: new Date().toISOString(),
+  //           payment_method: 'PayPal'
+  //         }
+  //       }),
+  //     });
 
-      const result = await response.json();
+  //     const result = await response.json();
 
-      if (!response.ok) {
-        console.error("❌ Payment confirmation API failed:", result.error);
-        return { success: false, error: result.error, data: undefined };
-      }
+  //     if (!response.ok) {
+  //       console.error("❌ Payment confirmation API failed:", result.error);
+  //       return { success: false, error: result.error, data: undefined };
+  //     }
 
-      console.log("✅ Payment confirmation email sent successfully via API");
-      return { success: true, data: result, error: undefined };
-    } catch (error: any) {
-      console.error("❌ Payment confirmation API error:", error);
-      return { success: false, error: error.message, data: undefined };
+  //     console.log("✅ Payment confirmation email sent successfully via API");
+  //     return { success: true, data: result, error: undefined };
+  //   } catch (error: any) {
+  //     console.error("❌ Payment confirmation API error:", error);
+  //     return { success: false, error: error.message, data: undefined };
+  //   }
+  // };
+
+
+  // Replace existing sendPaymentConfirmation with this implementation
+const formatDateLong = (d: Date) =>
+  d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+const buildPaymentEmail = (toEmail: string, name: string, orderId: string, amountVal: string, currencyVal: string) => {
+  const dateStr = formatDateLong(new Date());
+  const subject = "Payment Confirmation – Skill Passport Subscription";
+  const text = `From: Skill Passport <support@skillpassport.com>
+To: ${toEmail}
+Date: ${dateStr}
+
+Dear ${name},
+
+Thank you for your payment of ${currencyVal} ${amountVal} for your Skill Passport Premium Subscription.
+
+Transaction ID: ${orderId}
+Date: ${dateStr}
+Payment Method: PayPal
+
+Your account is now active and ready to use.
+Your credentials are:
+mail : ${toEmail}
+password : Created@123
+
+If you have any questions, contact us at support@skillpassport.com.
+
+— The Skill Passport Team
+`;
+
+  // Simple HTML alternative (keeps same content)
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;color:#111">
+      <p><strong>From:</strong> Skill Passport &lt;support@skillpassport.com&gt;</p>
+      <p><strong>To:</strong> ${toEmail}</p>
+      <p><strong>Date:</strong> ${dateStr}</p>
+
+      <p>Dear ${name},</p>
+
+      <p>Thank you for your payment of <strong>${currencyVal} ${amountVal}</strong> for your <strong>Skill Passport Premium Subscription</strong>.</p>
+
+      <ul>
+        <li><strong>Transaction ID:</strong> ${orderId}</li>
+        <li><strong>Date:</strong> ${dateStr}</li>
+        <li><strong>Payment Method:</strong> PayPal</li>
+      </ul>
+
+      <p>Your account is now active and ready to use.</p>
+
+      <p><strong>Your credentials are...</strong><br/>
+      mail : ${toEmail}<br/>
+      password : <code>Created@123</code>
+      </p>
+
+      <p>If you have any questions, contact us at <a href="mailto:support@skillpassport.com">support@skillpassport.com</a>.</p>
+
+      <p>— The Skill Passport Team</p>
+    </div>
+  `;
+
+  return { subject, text, html };
+};
+
+const sendPaymentConfirmation = async (userEmail: string, userFullName: string, orderId: string) => {
+  try {
+    console.log("📧 Sending payment confirmation via Edge Function...");
+
+    const amountVal = amount; // from the PaymentPage scope
+    const currencyVal = currency; // from the PaymentPage scope
+
+    const { subject, text, html } = buildPaymentEmail(userEmail, userFullName, orderId, amountVal, currencyVal);
+
+    const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+    if (!SUPABASE_ANON) {
+      console.warn("VITE_SUPABASE_ANON_KEY not configured in env - request may be rejected by Supabase runtime");
     }
-  };
+
+    const response = await fetch("https://xficomhdacoloehbzmlt.supabase.co/functions/v1/send-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // include Supabase anon key so the Edge runtime accepts the request
+        ...(SUPABASE_ANON ? { Authorization: `Bearer ${SUPABASE_ANON}` } : {}),
+      },
+      body: JSON.stringify({
+        // payload expected by your Edge Function: pass to, subject, text and html
+        to: userEmail,
+        subject,
+        text,
+        html,
+      }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      console.error("❌ Payment confirmation API failed:", result);
+      return { success: false, error: result.error ?? result, data: undefined };
+    }
+
+    console.log("✅ Payment confirmation email sent successfully via API");
+    return { success: true, data: result, error: undefined };
+  } catch (error: any) {
+    console.error("❌ Payment confirmation API error:", error);
+    return { success: false, error: error.message, data: undefined };
+  }
+};
+
+
+
 
   // // Function to send confirmation email (keep existing for now, but we'll use the new one)
   // const sendConfirmationEmail = async (userEmail: string, userFullName: string, orderId: string) => {
