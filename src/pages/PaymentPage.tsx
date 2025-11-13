@@ -84,7 +84,7 @@ const PaymentPage: React.FC = () => {
   const phone = state?.phone || "";
   const countryCode = state?.countryCode || "";
   const promoCode = state?.promoCode ?? null;
-  const amount = state?.amount || "14.99";
+  const amount = state?.amount || "0.1";
   const currency = state?.currency || DEFAULT_CURRENCY;
 
   const paypalButtonsRef = useRef<HTMLDivElement>(null);
