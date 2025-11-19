@@ -326,7 +326,7 @@ const HomePage: React.FC = () => {
 
       {/* WhatsApp Floating Button */}
       {/* <motion.a
-        href="https://wa.me/917997719874"
+        href="https://wa.me/917997719878"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-40 bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-green-700"
@@ -343,7 +343,7 @@ const HomePage: React.FC = () => {
 
 
       {/* <motion.a
-    href="https://wa.me/917997719874"
+    href="https://wa.me/917997719878"
     target="_blank"
     rel="noopener noreferrer"
     className="fixed bottom-6 right-6 z-40 bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-green-700"
@@ -364,7 +364,7 @@ const HomePage: React.FC = () => {
 
 
       <motion.a
-        href="https://wa.me/917997719874"
+        href="https://wa.me/917997719878"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-40 bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-green-700"
@@ -1137,7 +1137,7 @@ const HomePage: React.FC = () => {
             <p className="text-base text-gray-600">Need help getting started? Reach our team directly on WhatsApp and we'll respond quickly.</p>
             <div>
               {/* <a
-                href="https://wa.me/917997719874"
+                href="https://wa.me/917997719878"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 rounded-full bg-green-600 px-8 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300"
@@ -1149,7 +1149,7 @@ const HomePage: React.FC = () => {
 
 
               <a
-                href="https://wa.me/917997719874"
+                href="https://wa.me/917997719878"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 rounded-full bg-green-600 px-8 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300"
@@ -1521,7 +1521,7 @@ export default HomePage;
 
 // {/* WhatsApp Floating Button */}
 // <motion.a
-//   href="https://wa.me/917997719874"
+//   href="https://wa.me/917997719878"
 //   target="_blank"
 //   rel="noopener noreferrer"
 //   className="fixed bottom-6 right-6 z-40 bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-green-700"
@@ -2292,7 +2292,7 @@ export default HomePage;
 //             <p className="text-base text-gray-600">Need help getting started? Reach our team directly on WhatsApp and we'll respond quickly.</p>
 //             <div>
 //               {/* <a
-//                 href="https://wa.me/917997719874"
+//                 href="https://wa.me/917997719878"
 //                 target="_blank"
 //                 rel="noopener noreferrer"
 //                 className="inline-flex items-center gap-3 rounded-full bg-green-600 px-8 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300"
@@ -2302,7 +2302,7 @@ export default HomePage;
 //               </a> */}
 
 //               <a
-//   href="https://wa.me/917997719874"
+//   href="https://wa.me/917997719878"
 //   target="_blank"
 //   rel="noopener noreferrer"
 //   className="inline-flex items-center gap-3 rounded-full bg-green-600 px-8 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300"
