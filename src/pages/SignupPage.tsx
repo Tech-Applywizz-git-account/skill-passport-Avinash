@@ -418,7 +418,7 @@ const SignupPage: React.FC = () => {
           phone: form.phone.trim(),
           countryCode: form.countryCode,
           promoCode: form.promoCode.trim() || null,
-          amount: "0.1",
+          amount: "14.99",
           currency: "USD",
         },
       });
