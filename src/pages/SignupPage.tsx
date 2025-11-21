@@ -371,7 +371,7 @@ const SignupPage: React.FC = () => {
         paypal_status: "pending",
         paypal_intent: "CAPTURE",
         currency: "USD",
-        amount: 14.99,
+        amount: 0.1,
       };
 
       console.log("📝 Inserting data:", insertData);
@@ -402,7 +402,7 @@ const SignupPage: React.FC = () => {
           phone: form.phone.trim(),
           countryCode: form.countryCode,
           promoCode: form.promoCode.trim() || null,
-          amount: "14.99",
+          amount: "0.1",
           currency: "USD",
         },
       });
