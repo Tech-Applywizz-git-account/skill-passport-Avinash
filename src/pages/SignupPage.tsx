@@ -355,6 +355,22 @@ const SignupPage: React.FC = () => {
     }
 
     try {
+        const { error: leadsError } = await supabase
+        .from('naga_leads')
+        .insert([
+          {
+            full_name: form.fullName,
+            email: form.email,
+            phone: form.phone,
+            country_code: form.countryCode,
+            promo_code: "Main Site",
+          }
+        ]);
+
+      if (leadsError) {
+                  throw leadsError;
+                  return;
+      }
       const leadRef = makeLeadRef();
       console.log("🔄 Creating record with lead_ref:", leadRef);
 
