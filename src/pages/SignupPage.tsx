@@ -16,13 +16,27 @@ const SignupPage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showDialog, setShowDialog] = useState(false); // New state
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // New state for terms agreement
+  const [showTermsModal, setShowTermsModal] = useState(false); // New state for terms modal
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAgreedToTerms(e.target.checked);
+  };
+
+  const openTermsModal = () => {
+    setShowTermsModal(true);
+  };
+
+  const closeTermsModal = () => {
+    setShowTermsModal(false);
+  };
   const makeLeadRef = () => {
     if (window.crypto?.randomUUID) return window.crypto.randomUUID();
     return "lead_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -173,7 +187,7 @@ const SignupPage: React.FC = () => {
                     required
                     className="w-full rounded-xl border border-transparent bg-indigo-50/60 px-4 py-3 text-gray-900 outline-none ring-1 ring-indigo-100 focus:ring-2 focus:ring-indigo-300"
                   >
-                    <option value="">Select Code</option>
+                    <option value="">Code</option>
                     <option value="+1">+1 (US)</option>
                     <option value="+44">+44 (UK)</option>
                     <option value="+91">+91 (India)</option>
@@ -213,18 +227,30 @@ const SignupPage: React.FC = () => {
               </div>
                         
               <div className="space-y-2">
-                <label className="inline-flex items-center space-x-2 text-sm">
-                  <input
-                    id="terms"
-                    name="terms"
-                    type="checkbox"
-                    checked={agreedToTerms}
-                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    required
-                  />
-                  <span>I agree to the Terms & Conditions *</span>
-                </label>
+                <div className="flex items-start">
+                  <div className="flex items-center h-5 mt-1">
+                    <input
+                      id="terms"
+                      name="terms"
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={handleTermsChange}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="terms" className="font-medium text-gray-700">
+                      I agree to the{" "}
+                      <button 
+                        type="button"
+                        onClick={openTermsModal}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Terms & Conditions
+                      </button>
+                    </label>
+                  </div>
+                </div>
               </div>
 
               {error && (
@@ -248,6 +274,69 @@ const SignupPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Verification Dialog */}
+      {showDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 ">
+          <div className="rounded-xl bg-white p-6 shadow-lg max-w-lg text-center">
+            <h2 className="text-lg font-semibold text-gray-900">Verification Email Sent</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              A confirmation email has been sent to <span className="font-medium">{form.email}</span>.
+              Please check your inbox to verify your account.
+            </p>
+            <button
+              onClick={() => setShowDialog(false)}
+              className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-300"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+
+      {/* Login Modal */}
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+
+      {/* Terms and Conditions Modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative mx-4 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-lg">
+            <button
+              onClick={closeTermsModal}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">SkillPassport.AI – Terms & Conditions</h2>
+
+            <div className="text-gray-600 space-y-3">
+              <p className="font-medium">By proceeding, I agree that:</p>
+
+              <ul className="space-y-2 list-disc list-inside">
+                <li>I am purchasing lifetime access to SkillPassport.AI's verified job portal database</li>
+                <li>This is a digital, non-refundable product, no cancellations or refunds after purchase</li>
+                <li>Job links may expire or change if companies close applications or update their career portals</li>
+                <li>Sponsorship availability depends on each company's hiring policy at the time of access</li>
+                <li>SkillPassport.AI is not a recruitment agency and does not guarantee any job or sponsorship</li>
+                <li>I will use the platform only for personal job search purposes</li>
+              </ul>
+
+              <div className="pt-4 mt-4 border-t border-gray-200">
+                <button
+                  onClick={closeTermsModal}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-300"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
