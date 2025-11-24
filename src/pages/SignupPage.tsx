@@ -1,7 +1,9 @@
 // src/pages/SignupPage.tsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import supabase from "../utils/supabase";
+import { redirect, useNavigate } from "react-router-dom";
+import supabase from '../utils/supabase';
+import LoginModal from './LoginModal'; // Import LoginModal component
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
