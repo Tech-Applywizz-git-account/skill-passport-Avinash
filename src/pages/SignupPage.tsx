@@ -16,6 +16,7 @@ const SignupPage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); // State for login modal visibility
   const [showDialog, setShowDialog] = useState(false); // New state
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false); // New state for terms agreement
