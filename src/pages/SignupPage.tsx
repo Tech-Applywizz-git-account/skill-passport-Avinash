@@ -58,7 +58,7 @@ const SignupPage: React.FC = () => {
     }
 
     try {
-        const { error: leadsError } = await supabase
+      const { error: leadsError } = await supabase
         .from('naga_leads')
         .insert([
           {
@@ -66,13 +66,13 @@ const SignupPage: React.FC = () => {
             email: form.email,
             phone: form.phone,
             country_code: form.countryCode,
-            promo_code: "Main Site",
+            promo_code: "Karthikeya",
           }
         ]);
 
       if (leadsError) {
-                  throw leadsError;
-                  return;
+        throw leadsError;
+        return;
       }
       const leadRef = makeLeadRef();
       console.log("🔄 Creating record with lead_ref:", leadRef);
@@ -228,7 +228,7 @@ const SignupPage: React.FC = () => {
                   className="w-full rounded-xl border border-transparent bg-indigo-50/60 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none ring-1 ring-indigo-100 focus:ring-2 focus:ring-indigo-300"
                 />
               </div>
-                        
+
               <div className="space-y-2">
                 <div className="flex items-start">
                   <div className="flex items-center h-5 mt-1">
@@ -244,7 +244,7 @@ const SignupPage: React.FC = () => {
                   <div className="ml-3 text-sm">
                     <label htmlFor="terms" className="font-medium text-gray-700">
                       I agree to the{" "}
-                      <button 
+                      <button
                         type="button"
                         onClick={openTermsModal}
                         className="text-blue-600 hover:underline"
@@ -265,11 +265,10 @@ const SignupPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || !agreedToTerms}
-                className={`w-full rounded-xl px-6 py-3 text-lg font-semibold text-white shadow-lg hover:scale-[1.01] transition-transform focus:ring-4 focus:ring-blue-300 disabled:opacity-70 disabled:cursor-not-allowed ${
-                  agreedToTerms
+                className={`w-full rounded-xl px-6 py-3 text-lg font-semibold text-white shadow-lg hover:scale-[1.01] transition-transform focus:ring-4 focus:ring-blue-300 disabled:opacity-70 disabled:cursor-not-allowed ${agreedToTerms
                     ? "bg-gradient-to-r from-blue-800 to-purple-800 hover:from-blue-700 hover:to-purple-700"
                     : "bg-gradient-to-r from-blue-600 to-purple-600"
-                }`}
+                  }`}
               >
                 {loading ? "Redirecting to paypal payment page..." : "Proceed to Payment"}
               </button>
@@ -277,7 +276,7 @@ const SignupPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Verification Dialog */}
       {showDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 ">

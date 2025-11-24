@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -15,10 +17,13 @@ import {
   EyeOff,
   MessageCircle,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, Variant, AnimatePresence } from "framer-motion";
 import { div } from "framer-motion/client";
 
+
+
 // ---------- Animation Variants ----------
+
 
 const slideUp = {
   hidden: { opacity: 0, y: 40 },
@@ -42,7 +47,7 @@ const mobileMenuVariants = {
     y: 0,
     transition: { duration: 0.25, ease: "easeInOut" as const },
   },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: "easeIn" as const } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: "easeIn"  as const } },
 };
 
 // ---------- Login Modal Component ----------
@@ -173,17 +178,6 @@ const HomePage: React.FC = () => {
   const [productsOpen, setProductsOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [isFloatingWhatsAppDropdownOpen, setIsFloatingWhatsAppDropdownOpen] = useState(false);
-  const [isContactWhatsAppDropdownOpen, setIsContactWhatsAppDropdownOpen] = useState(false);
-  const [selectedWhatsAppNumber, setSelectedWhatsAppNumber] = useState("917997719875");
-
-  const whatsappNumbers = [
-    { number: "917997719875", label: "+91 79977 19875" },
-    { number: "917997719878", label: "+91 79977 19878" },
-    { number: "917997719881", label: "+91 79977 19881" }
-  ];
-
-  const getWhatsAppUrl = (number: string) => `https://wa.me/${number}`;
 
   const testimonials = [
     {
@@ -331,7 +325,7 @@ const HomePage: React.FC = () => {
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       <motion.a
-        href={getWhatsAppUrl(selectedWhatsAppNumber)}
+        href="https://wa.me/917997719878"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-40 bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-green-700"
@@ -340,68 +334,13 @@ const HomePage: React.FC = () => {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        onClick={(e) => {
-          if (whatsappNumbers.length > 1) {
-            e.preventDefault();
-            setIsFloatingWhatsAppDropdownOpen(!isFloatingWhatsAppDropdownOpen);
-            // Close the other dropdown if open
-            if (isContactWhatsAppDropdownOpen) {
-              setIsContactWhatsAppDropdownOpen(false);
-            }
-          }
-        }}
       >
         <img
           src="/whatsapplogo.png"
           alt="WhatsApp Chat"
           className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]"
         />
-        {whatsappNumbers.length > 1 && (
-          <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-            {whatsappNumbers.length}
-          </div>
-        )}
       </motion.a>
-
-      {whatsappNumbers.length > 1 && isFloatingWhatsAppDropdownOpen && (
-        <div 
-          className="fixed bottom-24 right-6 z-50 bg-white rounded-lg shadow-xl border border-gray-200 w-48"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="py-2">
-            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Select Number</div>
-            {whatsappNumbers.map((whatsapp, idx) => (
-              <a
-                key={idx}
-                href={getWhatsAppUrl(whatsapp.number)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`block px-4 py-2 text-sm ${
-                  selectedWhatsAppNumber === whatsapp.number
-                    ? "bg-blue-50 text-blue-700 font-medium"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedWhatsAppNumber(whatsapp.number);
-                  setIsFloatingWhatsAppDropdownOpen(false);
-                }}
-              >
-                {whatsapp.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Close dropdown when clicking elsewhere */}
-      {isFloatingWhatsAppDropdownOpen && (
-        <div 
-          className="fixed inset-0 z-45"
-          onClick={() => setIsFloatingWhatsAppDropdownOpen(false)}
-        />
-      )}
-      
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
         <div className="relative">
@@ -1158,78 +1097,19 @@ const HomePage: React.FC = () => {
             <h2 className="text-4xl font-bold text-gray-900">Chat with our WhatsApp support</h2>
             <p className="text-base text-gray-600">Need help getting started? Reach our team directly on WhatsApp and we'll respond quickly.</p>
             <div>
-              <div className="relative inline-block">
-                <a
-                  href={getWhatsAppUrl(selectedWhatsAppNumber)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 rounded-full bg-green-600 px-8 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300"
-                  onClick={(e) => {
-                    if (whatsappNumbers.length > 1) {
-                      e.preventDefault();
-                      setIsContactWhatsAppDropdownOpen(!isContactWhatsAppDropdownOpen);
-                      // Close the other dropdown if open
-                      if (isFloatingWhatsAppDropdownOpen) {
-                        setIsFloatingWhatsAppDropdownOpen(false);
-                      }
-                    }
-                  }}
-                >
-                  <img
-                    src="/whatsapplogo.png"
-                    alt="WhatsApp"
-                    className="w-8 h-8"
-                  />
-                  WhatsApp
-                </a>
-                
-                {whatsappNumbers.length > 1 && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setIsContactWhatsAppDropdownOpen(!isContactWhatsAppDropdownOpen);
-                      // Close the other dropdown if open
-                      if (isFloatingWhatsAppDropdownOpen) {
-                        setIsFloatingWhatsAppDropdownOpen(false);
-                      }
-                    }}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold"
-                  >
-                    {whatsappNumbers.length}
-                  </button>
-                )}
-                
-                {whatsappNumbers.length > 1 && isContactWhatsAppDropdownOpen && (
-                  <div 
-                    className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-xl border border-gray-200 w-48 z-50"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="py-2">
-                      <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Select Number</div>
-                      {whatsappNumbers.map((whatsapp, idx) => (
-                        <a
-                          key={idx}
-                          href={getWhatsAppUrl(whatsapp.number)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`block px-4 py-2 text-sm ${
-                            selectedWhatsAppNumber === whatsapp.number
-                              ? "bg-blue-50 text-blue-700 font-medium"
-                              : "text-gray-700 hover:bg-gray-100"
-                          }`}
-                          onClick={() => {
-                            setSelectedWhatsAppNumber(whatsapp.number);
-                            setIsContactWhatsAppDropdownOpen(false);
-                          }}
-                        >
-                          {whatsapp.label}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <a
+                href="https://wa.me/917997719878"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 rounded-full bg-green-600 px-8 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300"
+              >
+                <img
+                  src="/whatsapplogo.png"
+                  alt="WhatsApp"
+                  className="w-8 h-8"
+                />
+                WhatsApp
+              </a>
             </div>
           </motion.div>
         </div>
