@@ -5,7 +5,6 @@ import supabase from '../utils/supabase';
 import LoginModal from './LoginModal'; // Import LoginModal component
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 
-
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -15,7 +14,6 @@ const SignupPage: React.FC = () => {
     phone: "",
     email: "",
     promoCode: "",
-    password: "",  // Add password to form state
   });
 
   const [loading, setLoading] = useState(false);
@@ -42,11 +40,22 @@ const SignupPage: React.FC = () => {
   const closeTermsModal = () => {
     setShowTermsModal(false);
   };
+  const makeLeadRef = () => {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+    return "lead_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    // Validate form
+    if (!form.fullName.trim() || !form.email.trim() || !form.phone.trim() || !form.countryCode) {
+      setError("Please fill in all required fields");
+      setLoading(false);
+      return;
+    }
 
     try {
       const { error: leadsError } = await supabase
@@ -61,34 +70,77 @@ const SignupPage: React.FC = () => {
           }
         ]);
 
-      if (leadsError) throw leadsError;
-      // setTimeout(() => setShowDialog(false), 3000);
-      window.location.href = "https://www.paypal.com/ncp/payment/TP2EEK9DLKPUU";
+      if (leadsError) {
+        throw leadsError;
+        return;
+      }
+      const leadRef = makeLeadRef();
+      console.log("🔄 Creating record with lead_ref:", leadRef);
+
+      // Prepare data for insertion
+      const insertData = {
+        lead_ref: leadRef,
+        full_name: form.fullName.trim(),
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.trim(),
+        country_code: form.countryCode,
+        promo_code: form.promoCode.trim() || null,
+        status: "created",
+        payment_status: "pending",
+        paypal_status: "pending",
+        paypal_intent: "CAPTURE",
+        currency: "USD",
+        amount: 14.99,
+      };
+
+      console.log("📝 Inserting data:", insertData);
+
+      // Insert initial row into paymentssupertable
+      const { data, error: insertErr } = await supabase
+        .from("paymentssupertable")
+        .insert([insertData])
+        .select();
+
+      if (insertErr) {
+        console.error("❌ Supabase insert error:", insertErr);
+        throw new Error(`Failed to create account: ${insertErr.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error("No data returned after insertion");
+      }
+
+      console.log("✅ Record created successfully:", data[0]);
+
+      // Navigate to payment with all details + leadRef
+      navigate("/payment", {
+        state: {
+          leadRef,
+          email: form.email.trim(),
+          fullName: form.fullName.trim(),
+          phone: form.phone.trim(),
+          countryCode: form.countryCode,
+          promoCode: form.promoCode.trim() || null,
+          amount: "14.99",
+          currency: "USD",
+        },
+      });
     } catch (err: any) {
-      setError(err.message || "Something went wrong. Try again.");
+      console.error("❌ Signup error:", err);
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-
-  const handleLoginClick = () => {
-    setIsLoginModalOpen(true); // Open the login modal
-  };
-
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Back link */}
       <div className="mx-auto w-full max-w-5xl px-4 pt-6">
         <button
           onClick={() => navigate("/")}
           className="group inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         >
-          <svg
-            className="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
+          <svg className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
             <path
               fillRule="evenodd"
               d="M12.293 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L8.414 9H17a1 1 0 110 2H8.414l3.879 3.879a1 1 0 010 1.414z"
@@ -99,7 +151,6 @@ const SignupPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Card */}
       <div className="mx-auto mt-8 w-full max-w-3xl px-4 pb-12">
         <div className="rounded-2xl border border-gray-200 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.06)]">
           <div className="p-8 sm:p-12">
@@ -111,13 +162,9 @@ const SignupPage: React.FC = () => {
             </p>
 
             <form onSubmit={handleSubmit} className="mx-auto mt-10 max-w-2xl space-y-6">
-              {/* Full Name */}
               <div className="space-y-2">
-                <label
-                  htmlFor="fullName"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Full Name
+                <label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                  Full Name *
                 </label>
                 <input
                   id="fullName"
@@ -130,14 +177,10 @@ const SignupPage: React.FC = () => {
                 />
               </div>
 
-              {/* Country Code + Phone */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-1 space-y-2">
-                  <label
-                    htmlFor="countryCode"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Country Code
+                  <label htmlFor="countryCode" className="text-sm font-medium text-gray-700">
+                    Country Code *
                   </label>
                   <select
                     id="countryCode"
@@ -154,11 +197,8 @@ const SignupPage: React.FC = () => {
                   </select>
                 </div>
                 <div className="col-span-2 space-y-2">
-                  <label
-                    htmlFor="phone"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Phone Number
+                  <label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                    Phone Number *
                   </label>
                   <input
                     id="phone"
@@ -173,13 +213,9 @@ const SignupPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Email */}
               <div className="space-y-2">
-                <label
-                  htmlFor="email"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Email ID
+                <label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email ID *
                 </label>
                 <input
                   id="email"
@@ -193,7 +229,6 @@ const SignupPage: React.FC = () => {
                 />
               </div>
 
-              {/* Terms Agreement Checkbox */}
               <div className="space-y-2">
                 <div className="flex items-start">
                   <div className="flex items-center h-5 mt-1">
@@ -209,7 +244,7 @@ const SignupPage: React.FC = () => {
                   <div className="ml-3 text-sm">
                     <label htmlFor="terms" className="font-medium text-gray-700">
                       I agree to the{" "}
-                      <button 
+                      <button
                         type="button"
                         onClick={openTermsModal}
                         className="text-blue-600 hover:underline"
@@ -221,16 +256,21 @@ const SignupPage: React.FC = () => {
                 </div>
               </div>
 
+              {error && (
+                <div className="rounded-lg bg-red-50 p-4 border border-red-200">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={loading || !agreedToTerms}
-                className={`w-full rounded-xl px-6 py-3 text-lg font-semibold text-white shadow-lg hover:scale-[1.01] transition-transform focus:ring-4 focus:ring-blue-300 disabled:opacity-70 disabled:cursor-not-allowed ${
-                  agreedToTerms 
-                    ? "bg-gradient-to-r from-blue-800 to-purple-800" 
-                    : "bg-gradient-to-r from-blue-600 to-purple-600" 
-                }`}
+                className={`w-full rounded-xl px-6 py-3 text-lg font-semibold text-white shadow-lg hover:scale-[1.01] transition-transform focus:ring-4 focus:ring-blue-300 disabled:opacity-70 disabled:cursor-not-allowed ${agreedToTerms
+                    ? "bg-gradient-to-r from-blue-800 to-purple-800 hover:from-blue-700 hover:to-purple-700"
+                    : "bg-gradient-to-r from-blue-600 to-purple-600"
+                  }`}
               >
-                {loading ? "Opening payment page..." : "Proceed to Payment"}
+                {loading ? "Redirecting to paypal payment page..." : "Proceed to Payment"}
               </button>
             </form>
           </div>
@@ -272,12 +312,12 @@ const SignupPage: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            
+
             <h2 className="text-2xl font-bold text-gray-900 mb-4">SkillPassport.AI – Terms & Conditions</h2>
-            
+
             <div className="text-gray-600 space-y-3">
               <p className="font-medium">By proceeding, I agree that:</p>
-              
+
               <ul className="space-y-2 list-disc list-inside">
                 <li>I am purchasing lifetime access to SkillPassport.AI's verified job portal database</li>
                 <li>This is a digital, non-refundable product, no cancellations or refunds after purchase</li>
@@ -286,7 +326,7 @@ const SignupPage: React.FC = () => {
                 <li>SkillPassport.AI is not a recruitment agency and does not guarantee any job or sponsorship</li>
                 <li>I will use the platform only for personal job search purposes</li>
               </ul>
-              
+
               <div className="pt-4 mt-4 border-t border-gray-200">
                 <button
                   onClick={closeTermsModal}

@@ -7,6 +7,8 @@ import ComingSoon from './pages/comingSoon';
 // import Publications from './pages/Publications';
 // import JobReady from './pages/JobReady';
 // import H1B from './pages/H1B';
+import PaymentPage from "./pages/PaymentPage";
+
 
 const App: React.FC = () => {
   return (
@@ -16,6 +18,7 @@ const App: React.FC = () => {
         {/* <Route path="/product" element={<ProductPage />} /> */}
         <Route path="/signup" element={<SignupPage />} />   {/* <-- add this */}
         <Route path="/comingSoon" element={<ComingSoon />} />
+        <Route path="/payment" element={<PaymentPage />} />
          {/* <Route path="/Publications" element={<Publications />} /> */}
          {/* <Route path="/JobReady" element={<JobReady />} /> */}
          {/* <Route path="/H1B" element={<H1B />} /> */}
