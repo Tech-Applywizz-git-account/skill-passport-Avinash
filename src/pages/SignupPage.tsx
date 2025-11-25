@@ -1,4 +1,4 @@
-// src/pages/SignupPage.tsx
+//src/pages/SignupPage.tsx
 import React, { useState } from "react";
 import { redirect, useNavigate } from "react-router-dom";
 import supabase from '../utils/supabase';
@@ -66,7 +66,7 @@ const SignupPage: React.FC = () => {
             email: form.email,
             phone: form.phone,
             country_code: form.countryCode,
-            promo_code: "a4",
+            promo_code: "a5",
           }
         ]);
 
